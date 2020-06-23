@@ -1,4 +1,4 @@
 module.exports = {
-	pageExtensions: ['page.tsx'],
-	poweredByHeader: false
+  pageExtensions: ['page.js'],
+  poweredByHeader: false,
 };
