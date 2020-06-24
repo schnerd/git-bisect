@@ -9,6 +9,7 @@
     "lint": "eslint . --ext js,jsx"
   },
   "dependencies": {
+    "clsx": "^1.1.1",
     "next": "9.4.4",
     "react": "16.13.1",
     "react-dom": "16.13.1"

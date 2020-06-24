@@ -1,10 +1,15 @@
 import Head from 'next/head';
+import ShapeApp from '../components/ShapeApp';
+import CommitTimeline from '../components/CommitTimeline';
+import {NUM_COMMITS} from '../constants/constants';
+import Tool from '../components/Tool';
 
 export default function Home() {
+  const vizWidth = 800;
   return (
     <>
       <Head>
-        <title>Optimal 1D-clustering with Dynamic Programming</title>
+        <title>Understanding Git Bisect</title>
         <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" />
         <link
           href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Montserrat&display=swap"
@@ -13,27 +18,58 @@ export default function Home() {
       </Head>
 
       <main>
-        <h1 className="text-xl md:text-5xl leading-tight mb-6 mt-4 md:mt-20 p-container">
-          Optimal 1D-clustering with Dynamic Programming
+        <h1 className="text-2xl md:text-5xl leading-tight mb-6 mt-4 md:mt-20 p-container">
+          Using Git Bisect Effectively
         </h1>
-        <p className="text-xl container-md mb-4 p-container">
-          Clustering data is a common requirement for many real-world applications. Well known
-          methods like k-means clustering help cluster n-dimensional data, however many applications
-          only require the clustering of data across a single dimension.
+        <p className="text-xl mb-4 p-container">
+          Software developers generally use a version control system like git to save and manage the
+          history of the code they write. When they add a new feature or fix a bug, they "commit"
+          these changes to their code repository.
         </p>
-        <p className="text-xl container-md mb-4 p-container">
-          In 2016, researchers Haizhou Wang and Mingzhou Song published a new algorithm called
-          Ckmeans<sup>1</sup> that allows for fast & optimal 1-dimensional clustering using a
-          dynamic programming technique. This new approach has unlocked capabilities in data
-          visualization
-          <sup>2</sup> and other fields where clustering performance is vital.
+        <p className="text-xl mb-4 p-container">
+          As a project moves forward, developers may discover that some existing feature or behavior
+          has become broken. Often it's not clear <em>why</em> this functionality broke, and
+          searching through dozens of commits and files to debug the issue can be painful.
         </p>
-        <p className="text-xl container-md mb-4 p-container">
-          Many dynamic programming solutions can be difficult to grasp by just reading the code or
-          algorithm description, and this one is no exception. This document will visualize how the
-          algorithm works internally, hopefully helping others understand it better.
+        <p className="text-xl mb-4 p-container">
+          Thankfully the git version control system has a feature called "bisect" that is a
+          lifesaver in these scenarios. This document offers an interactive visualization to help
+          understand how git bisect works and why its so effective.
         </p>
-        <h3 className="text-2xl leading-tight mb-6 mt-10 p-container">Inputs & Outputs</h3>
+        <h3 className="text-xl md:text-2xl leading-tight mb-6 mt-4 md:mt-8 p-container">
+          Discovering an Issue
+        </h3>
+        <p className="text-xl mb-4 p-container">
+          Imagine we're working on an app that renders a collection of fun shapes. Unfortunately it
+          appears that the star shape got misaligned at some point, but its unclear when or why.
+        </p>
+        <div className="mb-4 v-container">
+          <ShapeApp commit={NUM_COMMITS} />
+          <CommitTimeline
+            width={vizWidth}
+            goodRange={[1, 1]}
+            badRange={[NUM_COMMITS, NUM_COMMITS]}
+            activeCommit={NUM_COMMITS}
+          />
+        </div>
+        <p className="text-xl mb-4 p-container">
+          We know that it was working when we launched v1 of the app last month, but there have been
+          dozens of changes since then and finding the problematic commit would be tedious.
+        </p>
+        <h3 className="text-xl md:text-2xl leading-tight mb-6 mt-4 md:mt-8 p-container">
+          Bisecting the Issue
+        </h3>
+        <p className="text-xl mb-4 p-container">
+          Git bisect allows you to do a binary search of the commits between a known good and known
+          bad commit. Because it uses a binary search, you will need to verify at most log(n)
+          commits – which is much easier than manually checking all commits one by one.
+        </p>
+        <p className="text-xl mb-4 p-container">
+          Use the interactive tool below to see how git bisect works in action:
+        </p>
+        <div className="mb-4 v-container">
+          <Tool width={vizWidth} />
+        </div>
       </main>
 
       <style jsx>{`
@@ -42,6 +78,15 @@ export default function Home() {
           max-width: 680px;
           margin-left: auto;
           margin-right: auto;
+        }
+        .v-container {
+          width: 100%;
+          max-width: 800px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .monospace {
+          font-family: monospace;
         }
       `}</style>
 
