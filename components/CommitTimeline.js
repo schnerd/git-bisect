@@ -22,7 +22,7 @@ export default memo(function CommitTimeline(props) {
 
   const commitSpacing = width / (NUM_COMMITS + 1);
 
-  const xPos = (commitNum) => Math.floor(commitNum * commitSpacing);
+  const xPos = (commitNum) => Math.floor(commitNum * commitSpacing) || 0;
 
   const commits = [];
   for (let i = 0; i < NUM_COMMITS; i++) {
@@ -39,7 +39,7 @@ export default memo(function CommitTimeline(props) {
           cy={COMMIT_LINE_Y + 1}
           r={7}
           fill="white"
-          stroke={isGoodCommit ? GREEN_500 : isBadCommit ? RED_600 : LINE_COLOR}
+          stroke={LINE_COLOR}
           strokeWidth="2"
         />,
       );

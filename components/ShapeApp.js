@@ -197,8 +197,7 @@ export default memo(function ShapeApp(props) {
         .root {
           width: 301px;
           max-width: 100%;
-          border: 1px solid ${GRAY_400};
-          border-radius: 5px;
+          min-width: 0;
         }
         .svg {
           max-width: 100%;
