@@ -113,7 +113,7 @@ export default memo(function CommitTimeline(props) {
 
   return (
     <>
-      <svg width={String(width)} height="105">
+      <svg className="svg" width={String(width)} height="105">
         <defs>
           <linearGradient id="gradient">
             <stop offset="0" stopColor="white" stopOpacity="0" />
@@ -194,6 +194,10 @@ export default memo(function CommitTimeline(props) {
         </g>
       </svg>
       <style jsx>{`
+        .svg {
+          max-width: 100%;
+          overflow: visible;
+        }
         .commit-label {
           font-size: 12px;
           font-family: 'Montserrat', sans-serif;

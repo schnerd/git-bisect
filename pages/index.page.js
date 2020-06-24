@@ -19,7 +19,7 @@ export default function Home() {
         />
       </Head>
 
-      <main className="mb-40">
+      <main className="mb-10 md:mb-40">
         <h1 className="text-2xl md:text-5xl leading-tight mb-6 mt-4 md:mt-20 p-container">
           Using Git Bisect Effectively
         </h1>
@@ -100,13 +100,16 @@ export default function Home() {
           max-width: 680px;
           margin-left: auto;
           margin-right: auto;
+          padding: 0 10px;
         }
         .v-container {
           width: 100%;
           max-width: 800px;
           margin-left: auto;
           margin-right: auto;
+          padding: 0 10px;
         }
+
         .monospace {
           font-family: monospace;
         }
@@ -115,8 +118,13 @@ export default function Home() {
         }
         @media (min-width: 600px) {
           .chart-container {
-            margin: 0 -20px 10px 10px;
+            margin: 0 10px 10px 10px;
             float: right;
+          }
+        }
+        @media (min-width: 768px) {
+          .chart-container {
+            margin: 0 -20px 10px 10px;
           }
         }
       `}</style>
