@@ -1,21 +1,24 @@
-import React, {memo} from 'react';
+import React, {memo, useEffect, useRef} from 'react';
+import {select as d3select} from 'd3-selection';
+import {curveBundle, line as d3line} from 'd3-shape';
+import {transition as d3transition} from 'd3-transition';
+import {easeCubicOut} from 'd3-ease';
 import {
   GRAY_600,
   GRAY_700,
-  GREEN_500,
   GREEN_600,
+  INDIGO_600,
   NUM_COMMITS,
-  RED_600,
   RED_700,
 } from '../constants/constants';
 
 const LINE_COLOR = GRAY_600;
 const ACTIVE_COMMIT_COLOR = GRAY_700;
 
-const COMMIT_LINE_Y = 40;
+const COMMIT_LINE_Y = 80;
 
 export default memo(function CommitTimeline(props) {
-  const {activeCommit, goodRange = [], badRange = [], width} = props;
+  const {activeCommit, visitedCommits = [], goodRange = [], badRange = [], width} = props;
 
   const [goodStart, goodEnd] = goodRange;
   const [badStart, badEnd] = badRange;
@@ -23,6 +26,50 @@ export default memo(function CommitTimeline(props) {
   const commitSpacing = width / (NUM_COMMITS + 1);
 
   const xPos = (commitNum) => Math.floor(commitNum * commitSpacing) || 0;
+
+  const curvesRef = useRef();
+  useEffect(() => {
+    if (!curvesRef.current) {
+      return;
+    }
+    const $curves = d3select(curvesRef.current);
+    if (visitedCommits.length >= 2) {
+      // Get last two commits visited, draw a line between them
+      const [start, end] = visitedCommits.slice(-2);
+
+      const midpointX = xPos(end) + (xPos(start) - xPos(end)) / 2;
+
+      const estSteps = Math.ceil(Math.log2(NUM_COMMITS));
+      const currentStep = visitedCommits.length - 2;
+      const curveFactor = (estSteps - currentStep) / estSteps;
+      const arcHeight = curveFactor * 70;
+
+      const points = [
+        [xPos(start), COMMIT_LINE_Y],
+        [midpointX, COMMIT_LINE_Y - arcHeight],
+        [xPos(end), COMMIT_LINE_Y],
+      ];
+      const path = d3line().curve(curveBundle.beta(curveFactor))(points);
+
+      const $path = $curves
+        .append('path')
+        .attr('d', path)
+        .attr('stroke', INDIGO_600)
+        .attr('stroke-width', 2)
+        .attr('fill', 'none');
+
+      // Animate the path
+      const totalLength = $path.node().getTotalLength();
+      const transition = d3transition().duration(2000).ease(easeCubicOut);
+      $path
+        .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+        .attr('stroke-dashoffset', totalLength)
+        .transition(transition)
+        .attr('stroke-dashoffset', 0);
+    } else {
+      $curves.selectAll('*').remove();
+    }
+  }, [visitedCommits]);
 
   const commits = [];
   for (let i = 0; i < NUM_COMMITS; i++) {
@@ -66,7 +113,7 @@ export default memo(function CommitTimeline(props) {
 
   return (
     <>
-      <svg width={String(width)} height="80">
+      <svg width={String(width)} height="105">
         <defs>
           <linearGradient id="gradient">
             <stop offset="0" stopColor="white" stopOpacity="0" />
@@ -78,7 +125,7 @@ export default memo(function CommitTimeline(props) {
             <rect x="0" y="0" width={width} height="210" fill="url(#gradient)" />
           </mask>
         </defs>
-        <g className="arrows" fillRule="nonzero" fill="none"></g>
+        <g ref={curvesRef} className="arrows" fillRule="nonzero" fill="none"></g>
         <g fillRule="nonzero" fill="none">
           <rect
             key="line"

@@ -1,4 +1,4 @@
-import React, {memo, useCallback, useState, useRef} from 'react';
+import React, {memo, useCallback, useRef, useState} from 'react';
 import {range as d3range} from 'd3-array';
 import Typist from 'react-typist';
 import clsx from 'clsx';
@@ -6,6 +6,7 @@ import ShapeApp from './ShapeApp';
 import {GRAY_400, GRAY_700, NUM_COMMITS} from '../constants/constants';
 import CommitTimeline from './CommitTimeline';
 import {Button} from './Button';
+import Legend from './Legend';
 
 const STAGES = {
   INITIAL: 0,
@@ -26,18 +27,20 @@ const createTerminalCursorRow = () => ({
 });
 
 export default memo(function Tool(props) {
-  const {width} = props;
+  const {showTerminal = true, showLegend = false, width} = props;
 
   const [possibleCommits, setPossibleCommits] = useState(d3range(2, NUM_COMMITS + 1));
+  const [visitedCommits, setVisitedCommits] = useState([NUM_COMMITS]);
   const [commit, setCommit] = useState(NUM_COMMITS);
   const [actionsVisible, setActionsVisible] = useState(true);
   const [stage, setStage] = useState(STAGES.INITIAL);
   const [terminalContent, setTerminalContent] = useState([createTerminalCursorRow()]);
-  const [goodRange, setGoodRange] = useState([]);
-  const [badRange, setBadRange] = useState([]);
+  const [goodRange, setGoodRange] = useState(props.goodRange || []);
+  const [badRange, setBadRange] = useState(props.badRange || []);
 
   const handleReset = useCallback(() => {
     setCommit(NUM_COMMITS);
+    setVisitedCommits([NUM_COMMITS]);
     setPossibleCommits(d3range(2, NUM_COMMITS + 1));
     setTerminalContent([createTerminalCursorRow()]);
     setStage(STAGES.INITIAL);
@@ -55,27 +58,13 @@ export default memo(function Tool(props) {
     if (isCurrentGood) {
       nextCommits = possibleCommits.slice(curCommitIndex + 1);
       setGoodRange([1, commit]);
-      console.log(
-        `Commit ${commit} is good, next commits: (${nextCommits.length}, ${Math.log2(
-          nextCommits.length,
-        )}): `,
-        nextCommits,
-      );
     } else {
       nextCommits = possibleCommits.slice(0, curCommitIndex + 1);
       setBadRange([commit, NUM_COMMITS]);
-      console.log(
-        `Commit ${commit} is bad, next commits (${nextCommits.length}, ${Math.log2(
-          nextCommits.length,
-        )}): `,
-        nextCommits,
-      );
     }
     setPossibleCommits(nextCommits);
     if (nextCommits.length <= 1) {
-      // Found it
       const badCommit = nextCommits[0] || commit;
-      console.log(`Found bad commit ${badCommit}`);
 
       setCommit(badCommit);
       setTerminalContent([
@@ -89,14 +78,20 @@ export default memo(function Tool(props) {
             `Date: Sun Jun 21 17:08:28 2020 -0700`,
           ].join('\n'),
         },
-        createTerminalCursorRow(),
+        {
+          id: ++terminalRowId,
+          type: 'out',
+          className: 'text-green-600 terminal-row-final',
+          text: `Congratulations, you successfully used git bisect! Read on below.`,
+        },
       ]);
       setStage(STAGES.COMPLETE);
     } else {
-      const nextCommitIndex = Math.floor(nextCommits.length / 2);
+      const nextCommitIndex = Math.floor((nextCommits.length - 1) / 2);
       const nextCommit = nextCommits[nextCommitIndex];
       const numRemainingCommits = nextCommits.length;
       setCommit(nextCommit);
+      setVisitedCommits([...visitedCommits, nextCommit]);
       setTerminalContent([
         ...terminalContentRef.current,
         {
@@ -164,12 +159,12 @@ export default memo(function Tool(props) {
       },
     ];
     setTerminalContent(terminalContentRef.current);
-  }, [terminalContent]);
+  }, [terminalContent, nextBisect]);
 
   const handleBisectGood = useCallback(() => {
     setActionsVisible(false);
     terminalContentRef.current = [
-      ...terminalContent.slice(0, -1),
+      ...terminalContentRef.current.slice(0, -1),
       {
         id: ++terminalRowId,
         type: 'cmd',
@@ -186,7 +181,7 @@ export default memo(function Tool(props) {
   const handleBisectBad = useCallback(() => {
     setActionsVisible(false);
     terminalContentRef.current = [
-      ...terminalContent.slice(0, -1),
+      ...terminalContentRef.current.slice(0, -1),
       {
         id: ++terminalRowId,
         type: 'cmd',
@@ -204,68 +199,70 @@ export default memo(function Tool(props) {
     <>
       <div>
         <div className="top flex items-stretch justify-center">
-          <div className="top-item terminal relative flex flex-col items-stretch justify-end">
-            <div className="terminal-content">
-              {terminalContent.map((item) => {
-                const {id, type, text, onTypingDone} = item;
-                let content;
-                if (type === 'cmd') {
-                  content = (
-                    <div>
-                      ${' '}
-                      <Typist onTypingDone={onTypingDone} cursor={typistCursorConfig}>
-                        {text}
-                      </Typist>
+          {showTerminal && (
+            <div className="top-item terminal relative flex flex-col items-stretch justify-end">
+              <div className="terminal-content">
+                {terminalContent.map((item) => {
+                  const {id, type, text, className, onTypingDone} = item;
+                  let content;
+                  if (type === 'cmd') {
+                    content = (
+                      <div>
+                        ${' '}
+                        <Typist onTypingDone={onTypingDone} cursor={typistCursorConfig}>
+                          {text}
+                        </Typist>
+                      </div>
+                    );
+                  } else {
+                    content = text;
+                  }
+                  return (
+                    <div key={`row-${id}`} className={`terminal-row ${className || ''}`}>
+                      {content}
                     </div>
                   );
-                } else {
-                  content = text;
-                }
-                return (
-                  <div key={`row-${id}`} className="terminal-row">
-                    {content}
+                })}
+              </div>
+              <div className={clsx('actions', actionsVisible && 'actions-visible')}>
+                {stage === STAGES.INITIAL && (
+                  <Button className="btn-w-code" onClick={handleStartBisectClick}>
+                    <div>Start Bisect</div>
+                    <div className="btn-code">$ git bisect start</div>
+                  </Button>
+                )}
+                {stage === STAGES.AFTER_START && (
+                  <Button className="btn-w-code" onClick={handleSpecifyKnownGoodCommit}>
+                    <div>Specify Good Commit</div>
+                    <div className="btn-code">$ git bisect good v1</div>
+                  </Button>
+                )}
+                {stage === STAGES.AFTER_GOOD && (
+                  <Button className="btn-w-code" onClick={handleSpecifyKnownBadCommit}>
+                    <div>Specify Bad Commit</div>
+                    <div className="btn-code">$ git bisect bad HEAD</div>
+                  </Button>
+                )}
+                {stage === STAGES.RUNNING && (
+                  <div className="flex flex-row items-center justify-center">
+                    <Button className="btn-w-code mr-2" kind="positive" onClick={handleBisectGood}>
+                      <div>Looks Good</div>
+                      <div className="btn-code">$ git bisect good</div>
+                    </Button>
+                    <Button className="btn-w-code" kind="negative" onClick={handleBisectBad}>
+                      <div>Looks Bad</div>
+                      <div className="btn-code">$ git bisect bad</div>
+                    </Button>
                   </div>
-                );
-              })}
-            </div>
-            <div className={clsx('actions', actionsVisible && 'actions-visible')}>
-              {stage === STAGES.INITIAL && (
-                <Button className="btn-w-code" onClick={handleStartBisectClick}>
-                  <div>Start Bisect</div>
-                  <div className="btn-code">$ git bisect start</div>
+                )}
+              </div>
+              {stage !== STAGES.INITIAL && (
+                <Button className="reset-btn" onClick={handleReset}>
+                  Reset
                 </Button>
-              )}
-              {stage === STAGES.AFTER_START && (
-                <Button className="btn-w-code" onClick={handleSpecifyKnownGoodCommit}>
-                  <div>Specify Good Commit</div>
-                  <div className="btn-code">$ git bisect good v1</div>
-                </Button>
-              )}
-              {stage === STAGES.AFTER_GOOD && (
-                <Button className="btn-w-code" onClick={handleSpecifyKnownBadCommit}>
-                  <div>Specify Bad Commit</div>
-                  <div className="btn-code">$ git bisect bad HEAD</div>
-                </Button>
-              )}
-              {stage === STAGES.RUNNING && (
-                <div className="flex flex-row align-center justify-center">
-                  <Button className="btn-w-code mr-2" kind="positive" onClick={handleBisectGood}>
-                    <div>Looks Good</div>
-                    <div className="btn-code">$ git bisect good</div>
-                  </Button>
-                  <Button className="btn-w-code" kind="negative" onClick={handleBisectBad}>
-                    <div>Looks Bad</div>
-                    <div className="btn-code">$ git bisect bad</div>
-                  </Button>
-                </div>
               )}
             </div>
-            {stage !== STAGES.INITIAL && (
-              <Button className="reset-btn" onClick={handleReset}>
-                Reset
-              </Button>
-            )}
-          </div>
+          )}
           <div className="top-item app">
             <ShapeApp commit={commit} />
           </div>
@@ -276,7 +273,9 @@ export default memo(function Tool(props) {
             goodRange={goodRange}
             badRange={badRange}
             activeCommit={commit}
+            visitedCommits={visitedCommits}
           />
+          {showLegend && <Legend />}
         </div>
       </div>
       <style jsx>{`
@@ -298,16 +297,21 @@ export default memo(function Tool(props) {
           width: 300px;
           min-width: 150px;
         }
-        .terminal-row {
-          color: ${GRAY_700};
+        .terminal-content {
           font-family: monospace;
           font-size: 13px;
+          color: ${GRAY_700};
+        }
+        .terminal-row {
           padding: 2px 8px;
           line-height: 1;
           white-space: pre-line;
         }
         .terminal-row:last-child {
           margin-bottom: 4px;
+        }
+        :global(.terminal-row-final) {
+          margin-top: 10px;
         }
         :global(.Typist) {
           display: inline;

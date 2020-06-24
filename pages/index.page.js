@@ -3,6 +3,7 @@ import ShapeApp from '../components/ShapeApp';
 import CommitTimeline from '../components/CommitTimeline';
 import {NUM_COMMITS} from '../constants/constants';
 import Tool from '../components/Tool';
+import Legend from '../components/Legend';
 
 export default function Home() {
   const vizWidth = 800;
@@ -17,7 +18,7 @@ export default function Home() {
         />
       </Head>
 
-      <main>
+      <main className="mb-40">
         <h1 className="text-2xl md:text-5xl leading-tight mb-6 mt-4 md:mt-20 p-container">
           Using Git Bisect Effectively
         </h1>
@@ -43,13 +44,13 @@ export default function Home() {
           Imagine we're working on an app that renders a collection of fun shapes. Unfortunately it
           appears that the star shape got misaligned at some point, but its unclear when or why.
         </p>
-        <div className="mb-4 v-container">
-          <ShapeApp commit={NUM_COMMITS} />
-          <CommitTimeline
-            width={vizWidth}
+        <div className="mt-8 mb-8 v-container">
+          <Tool
+            showTerminal={false}
+            showLegend
             goodRange={[1, 1]}
             badRange={[NUM_COMMITS, NUM_COMMITS]}
-            activeCommit={NUM_COMMITS}
+            width={vizWidth}
           />
         </div>
         <p className="text-xl mb-4 p-container">
@@ -67,9 +68,13 @@ export default function Home() {
         <p className="text-xl mb-4 p-container">
           Use the interactive tool below to see how git bisect works in action:
         </p>
-        <div className="mb-4 v-container">
+        <div className="mt-8 mb-8 v-container">
           <Tool width={vizWidth} />
         </div>
+        <h3 className="text-xl md:text-2xl leading-tight mb-6 mt-4 md:mt-8 p-container">
+          How much faster is it?
+        </h3>
+        <p className="text-xl mb-4 p-container">Lorem ipsum dolor sit amet</p>
       </main>
 
       <style jsx>{`
