@@ -9,7 +9,6 @@ export default function Home() {
   const [vizWidth, setVizWidth] = useState(null);
 
   useEffect(() => {
-    debugger;
     setVizWidth(document.querySelector('.bottom').clientWidth);
     window.addEventListener(
       'resize',
@@ -104,7 +103,7 @@ export default function Home() {
         <p className="text-xl mb-4 p-container">
           Leveraging the power of log(n) binary searches, git bisect can be a powerful tool in the
           developer utility belt. Hopefully this document helped illustrate how it works and why its
-          so effective. Hopefully you find
+          so effective.
         </p>
       </main>
 
