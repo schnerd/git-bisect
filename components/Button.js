@@ -9,6 +9,9 @@ import {
   GREEN_700,
   GREEN_800,
   INDIGO_600,
+  RED_600,
+  RED_700,
+  RED_800,
 } from '../constants/constants';
 
 export function Button(props) {
@@ -22,6 +25,7 @@ export function Button(props) {
           className,
           !kind && 'btn-default',
           kind === 'positive' && 'btn-positive',
+          kind === 'negative' && 'btn-negative',
         )}
         onClick={onClick}
       >
@@ -73,6 +77,20 @@ export function Button(props) {
         }
         .btn-positive:focus {
           outline-color: ${GREEN_800};
+        }
+
+        .btn-negative {
+          background: ${RED_600};
+          color: white;
+        }
+        .btn-negative:hover {
+          background: ${RED_700};
+        }
+        .btn-negative:active {
+          background: ${RED_800};
+        }
+        .btn-negative:focus {
+          outline-color: ${RED_800};
         }
       `}</style>
     </>

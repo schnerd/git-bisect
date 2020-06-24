@@ -1,4 +1,5 @@
 import React, {memo, useCallback, useState, useRef} from 'react';
+import {range as d3range} from 'd3-array';
 import Typist from 'react-typist';
 import clsx from 'clsx';
 import ShapeApp from './ShapeApp';
@@ -11,22 +12,34 @@ const STAGES = {
   AFTER_START: 1,
   AFTER_GOOD: 2,
   RUNNING: 3,
+  COMPLETE: 4,
 };
 
-const typistCursor = {show: false};
-let terminalId = 0;
+const typistCursorConfig = {show: false};
+
+let terminalRowId = 0;
+
+const createTerminalCursorRow = () => ({
+  id: ++terminalRowId,
+  type: 'out',
+  text: '$ ',
+});
 
 export default memo(function Tool(props) {
-  const {commit, width} = props;
+  const {width} = props;
 
+  const [possibleCommits, setPossibleCommits] = useState(d3range(2, NUM_COMMITS + 1));
+  const [commit, setCommit] = useState(NUM_COMMITS);
   const [actionsVisible, setActionsVisible] = useState(true);
   const [stage, setStage] = useState(STAGES.INITIAL);
-  const [terminalContent, setTerminalContent] = useState([]);
+  const [terminalContent, setTerminalContent] = useState([createTerminalCursorRow()]);
   const [goodRange, setGoodRange] = useState([]);
   const [badRange, setBadRange] = useState([]);
 
   const handleReset = useCallback(() => {
-    setTerminalContent([]);
+    setCommit(NUM_COMMITS);
+    setPossibleCommits(d3range(2, NUM_COMMITS + 1));
+    setTerminalContent([createTerminalCursorRow()]);
     setStage(STAGES.INITIAL);
     setActionsVisible(true);
     setGoodRange([]);
@@ -36,67 +49,156 @@ export default memo(function Tool(props) {
   const terminalContentRef = useRef(null);
   terminalContentRef.current = terminalContent;
 
+  function nextBisect(isCurrentGood) {
+    const curCommitIndex = possibleCommits.findIndex((c) => c === commit);
+    let nextCommits;
+    if (isCurrentGood) {
+      nextCommits = possibleCommits.slice(curCommitIndex + 1);
+      setGoodRange([1, commit]);
+      console.log(
+        `Commit ${commit} is good, next commits: (${nextCommits.length}, ${Math.log2(
+          nextCommits.length,
+        )}): `,
+        nextCommits,
+      );
+    } else {
+      nextCommits = possibleCommits.slice(0, curCommitIndex + 1);
+      setBadRange([commit, NUM_COMMITS]);
+      console.log(
+        `Commit ${commit} is bad, next commits (${nextCommits.length}, ${Math.log2(
+          nextCommits.length,
+        )}): `,
+        nextCommits,
+      );
+    }
+    setPossibleCommits(nextCommits);
+    if (nextCommits.length <= 1) {
+      // Found it
+      const badCommit = nextCommits[0] || commit;
+      console.log(`Found bad commit ${badCommit}`);
+
+      setCommit(badCommit);
+      setTerminalContent([
+        ...terminalContentRef.current.slice(0, -1),
+        {
+          id: ++terminalRowId,
+          type: 'out',
+          text: [
+            `${badCommit} is the first bad commit`,
+            `Author: Daffy Duck`,
+            `Date: Sun Jun 21 17:08:28 2020 -0700`,
+          ].join('\n'),
+        },
+        createTerminalCursorRow(),
+      ]);
+      setStage(STAGES.COMPLETE);
+    } else {
+      const nextCommitIndex = Math.floor(nextCommits.length / 2);
+      const nextCommit = nextCommits[nextCommitIndex];
+      const numRemainingCommits = nextCommits.length;
+      setCommit(nextCommit);
+      setTerminalContent([
+        ...terminalContentRef.current,
+        {
+          id: ++terminalRowId,
+          type: 'out',
+          text: [
+            `Bisecting: roughly more ${Math.floor(Math.log2(numRemainingCommits))} step(s)`,
+            `Viewing commit ${nextCommit}`,
+          ].join('\n'),
+        },
+        createTerminalCursorRow(),
+      ]);
+    }
+  }
+
   const handleStartBisectClick = useCallback(() => {
     setActionsVisible(false);
     setTerminalContent([
       ...terminalContent.slice(0, -1),
       {
-        id: ++terminalId,
+        id: ++terminalRowId,
         type: 'cmd',
         text: 'git bisect start',
-        onComplete: () => {
+        onTypingDone: () => {
           setStage(STAGES.AFTER_START);
           setActionsVisible(true);
-          setTerminalContent([
-            ...terminalContentRef.current.slice(0),
-            {id: ++terminalId, type: 'out', text: '$ '},
-          ]);
+          setTerminalContent([...terminalContentRef.current.slice(0), createTerminalCursorRow()]);
         },
       },
     ]);
   }, [terminalContent]);
 
-  const handleSpecifyGoodCommit = useCallback(() => {
+  const handleSpecifyKnownGoodCommit = useCallback(() => {
     setActionsVisible(false);
     setTerminalContent([
       ...terminalContent.slice(0, -1),
       {
-        id: ++terminalId,
+        id: ++terminalRowId,
         type: 'cmd',
         text: 'git bisect good v1',
-        onComplete: () => {
+        onTypingDone: () => {
           setStage(STAGES.AFTER_GOOD);
           setActionsVisible(true);
           setGoodRange([1, 1]);
-          setTerminalContent([
-            ...terminalContentRef.current.slice(0),
-            {id: ++terminalId, type: 'out', text: '$ '},
-          ]);
+          setTerminalContent([...terminalContentRef.current.slice(0), createTerminalCursorRow()]);
         },
       },
     ]);
   }, [terminalContent]);
 
-  const handleSpecifyBadCommit = useCallback(() => {
+  const handleSpecifyKnownBadCommit = useCallback(() => {
     setActionsVisible(false);
-    setTerminalContent([
+    terminalContentRef.current = [
       ...terminalContent.slice(0, -1),
       {
-        id: ++terminalId,
+        id: ++terminalRowId,
         type: 'cmd',
         text: 'git bisect bad HEAD',
-        onComplete: () => {
+        onTypingDone: () => {
           setStage(STAGES.RUNNING);
           setActionsVisible(true);
           setBadRange([NUM_COMMITS, NUM_COMMITS]);
-          setTerminalContent([
-            ...terminalContentRef.current.slice(0),
-            {id: ++terminalId, type: 'out', text: '$ '},
-          ]);
+          nextBisect(false);
         },
       },
-    ]);
+    ];
+    setTerminalContent(terminalContentRef.current);
   }, [terminalContent]);
+
+  const handleBisectGood = useCallback(() => {
+    setActionsVisible(false);
+    terminalContentRef.current = [
+      ...terminalContent.slice(0, -1),
+      {
+        id: ++terminalRowId,
+        type: 'cmd',
+        text: 'git bisect good',
+        onTypingDone: () => {
+          nextBisect(true);
+          setActionsVisible(true);
+        },
+      },
+    ];
+    setTerminalContent(terminalContentRef.current);
+  }, [nextBisect]);
+
+  const handleBisectBad = useCallback(() => {
+    setActionsVisible(false);
+    terminalContentRef.current = [
+      ...terminalContent.slice(0, -1),
+      {
+        id: ++terminalRowId,
+        type: 'cmd',
+        text: 'git bisect bad',
+        onTypingDone: () => {
+          nextBisect(false);
+          setActionsVisible(true);
+        },
+      },
+    ];
+    setTerminalContent(terminalContentRef.current);
+  }, [nextBisect]);
 
   return (
     <>
@@ -105,13 +207,13 @@ export default memo(function Tool(props) {
           <div className="top-item terminal relative flex flex-col items-stretch justify-end">
             <div className="terminal-content">
               {terminalContent.map((item) => {
-                const {id, type, text, onComplete} = item;
+                const {id, type, text, onTypingDone} = item;
                 let content;
                 if (type === 'cmd') {
                   content = (
                     <div>
                       ${' '}
-                      <Typist onTypingDone={onComplete} cursor={typistCursor}>
+                      <Typist onTypingDone={onTypingDone} cursor={typistCursorConfig}>
                         {text}
                       </Typist>
                     </div>
@@ -134,16 +236,28 @@ export default memo(function Tool(props) {
                 </Button>
               )}
               {stage === STAGES.AFTER_START && (
-                <Button className="btn-w-code" onClick={handleSpecifyGoodCommit}>
+                <Button className="btn-w-code" onClick={handleSpecifyKnownGoodCommit}>
                   <div>Specify Good Commit</div>
                   <div className="btn-code">$ git bisect good v1</div>
                 </Button>
               )}
               {stage === STAGES.AFTER_GOOD && (
-                <Button className="btn-w-code" onClick={handleSpecifyBadCommit}>
+                <Button className="btn-w-code" onClick={handleSpecifyKnownBadCommit}>
                   <div>Specify Bad Commit</div>
                   <div className="btn-code">$ git bisect bad HEAD</div>
                 </Button>
+              )}
+              {stage === STAGES.RUNNING && (
+                <div className="flex flex-row align-center justify-center">
+                  <Button className="btn-w-code mr-2" kind="positive" onClick={handleBisectGood}>
+                    <div>Looks Good</div>
+                    <div className="btn-code">$ git bisect good</div>
+                  </Button>
+                  <Button className="btn-w-code" kind="negative" onClick={handleBisectBad}>
+                    <div>Looks Bad</div>
+                    <div className="btn-code">$ git bisect bad</div>
+                  </Button>
+                </div>
               )}
             </div>
             {stage !== STAGES.INITIAL && (
@@ -153,7 +267,7 @@ export default memo(function Tool(props) {
             )}
           </div>
           <div className="top-item app">
-            <ShapeApp commit={NUM_COMMITS} />
+            <ShapeApp commit={commit} />
           </div>
         </div>
         <div className="bottom">
@@ -161,7 +275,7 @@ export default memo(function Tool(props) {
             width={width}
             goodRange={goodRange}
             badRange={badRange}
-            activeCommit={NUM_COMMITS}
+            activeCommit={commit}
           />
         </div>
       </div>
@@ -190,6 +304,7 @@ export default memo(function Tool(props) {
           font-size: 13px;
           padding: 2px 8px;
           line-height: 1;
+          white-space: pre-line;
         }
         .terminal-row:last-child {
           margin-bottom: 4px;
@@ -207,9 +322,11 @@ export default memo(function Tool(props) {
           justify-content: center;
           opacity: 0;
           transition: opacity 0.3s;
+          pointer-events: none;
         }
         .actions-visible {
           opacity: 1;
+          pointer-events: all;
         }
         :global(.btn.reset-btn) {
           position: absolute;
@@ -222,7 +339,7 @@ export default memo(function Tool(props) {
         :global(.btn.btn-w-code) {
           display: inline-block;
           text-align: left;
-          min-width: 140px;
+          min-width: 130px;
         }
         :global(.btn-code) {
           font-size: 0.8em;
