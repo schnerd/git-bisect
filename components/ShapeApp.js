@@ -1,5 +1,5 @@
 import React, {memo} from 'react';
-import {BROKEN_COMMIT, GRAY_300, GRAY_400} from '../constants/constants';
+import {BROKEN_COMMIT, GRAY_300, GRAY_400, NUM_COMMITS} from '../constants/constants';
 
 const star = (
   <polygon
@@ -188,6 +188,9 @@ export default memo(function ShapeApp(props) {
 
   return (
     <div className="root">
+      <div className="absolute top-0 left-0 p-2 text-gray-800 text-xs leading-none bg-white rounded-tl rounded-br border-r border-b border-gray-400">
+        App @ {commit === NUM_COMMITS ? 'HEAD' : `Commit ${commit}`}
+      </div>
       <svg className="svg" width="301" height="354" viewBox="0 0 301 354">
         <g fillRule="nonzero" fill="none">
           {renderedShapes}
@@ -198,6 +201,7 @@ export default memo(function ShapeApp(props) {
           width: 301px;
           max-width: 100%;
           min-width: 0;
+          position: relative;
         }
         .svg {
           max-width: 100%;

@@ -1,13 +1,24 @@
+import {useState, useRef, useEffect} from 'react';
 import Head from 'next/head';
-import ShapeApp from '../components/ShapeApp';
-import CommitTimeline from '../components/CommitTimeline';
+import debounce from 'lodash/debounce';
 import {NUM_COMMITS} from '../constants/constants';
 import Tool from '../components/Tool';
-import Legend from '../components/Legend';
 import Chart from '../components/Chart';
 
 export default function Home() {
-  const vizWidth = 800;
+  const [vizWidth, setVizWidth] = useState(null);
+
+  useEffect(() => {
+    debugger;
+    setVizWidth(document.querySelector('.bottom').clientWidth);
+    window.addEventListener(
+      'resize',
+      debounce(() => {
+        setVizWidth(document.querySelector('.bottom').clientWidth);
+      }, 50),
+    );
+  }, []);
+
   return (
     <>
       <Head>
@@ -88,10 +99,13 @@ export default function Home() {
             find the problematic commit in roughly 14 steps. This is a non-intuitive concept that
             really illustrates the power of git bisect and binary searches in general.
           </p>
-          <p className="text-xl mb-4 p-container clear-both">
-            Lorem ipsum dolor sit amet. Hello world okay.
-          </p>
         </div>
+        <h3 className="text-xl md:text-2xl leading-tight mb-6 mt-4 md:mt-8 p-container">Summary</h3>
+        <p className="text-xl mb-4 p-container">
+          Leveraging the power of log(n) binary searches, git bisect can be a powerful tool in the
+          developer utility belt. Hopefully this document helped illustrate how it works and why its
+          so effective. Hopefully you find
+        </p>
       </main>
 
       <style jsx>{`

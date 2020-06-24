@@ -71,6 +71,10 @@ export default memo(function CommitTimeline(props) {
     }
   }, [visitedCommits]);
 
+  if (!width) {
+    return null;
+  }
+
   const commits = [];
   for (let i = 0; i < NUM_COMMITS; i++) {
     let commitNum = i + 1;
@@ -113,7 +117,7 @@ export default memo(function CommitTimeline(props) {
 
   return (
     <>
-      <svg className="svg" width={String(width)} height="105">
+      <svg className="commit-svg" width={String(width)} height="105">
         <defs>
           <linearGradient id="gradient">
             <stop offset="0" stopColor="white" stopOpacity="0" />
@@ -194,7 +198,7 @@ export default memo(function CommitTimeline(props) {
         </g>
       </svg>
       <style jsx>{`
-        .svg {
+        .commit-svg {
           max-width: 100%;
           overflow: visible;
         }

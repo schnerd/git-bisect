@@ -1,4 +1,4 @@
-import React, {memo, useCallback, useRef, useState} from 'react';
+import React, {memo, useCallback, useRef, useState, useEffect} from 'react';
 import {range as d3range} from 'd3-array';
 import Typist from 'react-typist';
 import clsx from 'clsx';
@@ -81,7 +81,7 @@ export default memo(function Tool(props) {
         {
           id: ++terminalRowId,
           type: 'out',
-          className: 'text-green-600 terminal-row-final',
+          className: 'text-green-600 terminal-row-final text-base',
           text: `Congratulations, you successfully used git bisect! Read on below.`,
         },
       ]);
@@ -195,13 +195,24 @@ export default memo(function Tool(props) {
     setTerminalContent(terminalContentRef.current);
   }, [nextBisect]);
 
+  // Make sure terminal stays scrolled to bottom
+  const terminalContentElRef = useRef();
+  useEffect(() => {
+    const $el = terminalContentElRef.current;
+    if (!$el) return;
+    $el.scrollTop = $el.scrollHeight - $el.clientHeight;
+  }, [terminalContent]);
+
   return (
     <>
       <div>
         <div className="top flex items-stretch justify-center">
           {showTerminal && (
             <div className="top-item terminal relative flex flex-col items-stretch justify-end">
-              <div className="terminal-content">
+              <div
+                ref={terminalContentElRef}
+                className="terminal-content absolute inset-0 flex flex-col items-stretch justify-end"
+              >
                 {terminalContent.map((item) => {
                   const {id, type, text, className, onTypingDone} = item;
                   let content;
@@ -243,18 +254,6 @@ export default memo(function Tool(props) {
                     <div className="btn-code">$ git bisect bad HEAD</div>
                   </Button>
                 )}
-                {stage === STAGES.RUNNING && (
-                  <div className="flex flex-row items-center justify-center">
-                    <Button className="btn-w-code mr-2" kind="positive" onClick={handleBisectGood}>
-                      <div>Looks Good</div>
-                      <div className="btn-code">$ git bisect good</div>
-                    </Button>
-                    <Button className="btn-w-code" kind="negative" onClick={handleBisectBad}>
-                      <div>Looks Bad</div>
-                      <div className="btn-code">$ git bisect bad</div>
-                    </Button>
-                  </div>
-                )}
               </div>
               {stage !== STAGES.INITIAL && (
                 <Button className="reset-btn" onClick={handleReset}>
@@ -263,8 +262,25 @@ export default memo(function Tool(props) {
               )}
             </div>
           )}
-          <div className="top-item app">
+          <div className="top-item app relative">
             <ShapeApp commit={commit} />
+            <div
+              className={clsx(
+                'app-actions',
+                stage === STAGES.RUNNING && actionsVisible && 'actions-visible',
+              )}
+            >
+              <div className="flex flex-row items-center justify-center">
+                <Button className="btn-w-code mr-2" kind="positive" onClick={handleBisectGood}>
+                  <div>Looks Good</div>
+                  <div className="btn-code">$ git bisect good</div>
+                </Button>
+                <Button className="btn-w-code" kind="negative" onClick={handleBisectBad}>
+                  <div>Looks Bad</div>
+                  <div className="btn-code">$ git bisect bad</div>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
         <div className="bottom">
@@ -301,10 +317,11 @@ export default memo(function Tool(props) {
           font-family: monospace;
           font-size: 13px;
           color: ${GRAY_700};
+          overflow: auto;
         }
         .terminal-row {
           padding: 2px 8px;
-          line-height: 1;
+          line-height: 1.2;
           white-space: pre-line;
         }
         .terminal-row:last-child {
@@ -324,6 +341,16 @@ export default memo(function Tool(props) {
           transform: translateY(-50%);
           display: flex;
           justify-content: center;
+          opacity: 0;
+          transition: opacity 0.3s;
+          pointer-events: none;
+        }
+        .app-actions {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          padding: 10px;
           opacity: 0;
           transition: opacity 0.3s;
           pointer-events: none;
