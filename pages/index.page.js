@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import Head from 'next/head';
 import debounce from 'lodash/debounce';
 import {NUM_COMMITS} from '../constants/constants';

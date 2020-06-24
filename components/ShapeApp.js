@@ -1,5 +1,5 @@
 import React, {memo} from 'react';
-import {BROKEN_COMMIT, GRAY_300, GRAY_400, NUM_COMMITS} from '../constants/constants';
+import {BROKEN_COMMIT, NUM_COMMITS} from '../constants/constants';
 
 const star = (
   <polygon
@@ -26,6 +26,8 @@ const starRotated = (
   />
 );
 
+// Keys are handled by cloneElement in the render logic
+/* eslint-disable react/jsx-key */
 const otherShapes = [
   <rect
     stroke="#979797"

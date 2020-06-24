@@ -26,12 +26,17 @@ export default memo(function CommitTimeline(props) {
   const commitSpacing = width / (NUM_COMMITS + 1);
 
   const xPos = (commitNum) => Math.floor(commitNum * commitSpacing) || 0;
+  // Store xPos in a ref so we can call it safely from useEffect below
+  const xPosRef = useRef();
+  xPosRef.current = xPos;
 
   const curvesRef = useRef();
+
   useEffect(() => {
     if (!curvesRef.current) {
       return;
     }
+    const xPos = xPosRef.current;
     const $curves = d3select(curvesRef.current);
     if (visitedCommits.length >= 2) {
       // Get last two commits visited, draw a line between them

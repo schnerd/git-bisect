@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import {
-  GRAY_200,
   GRAY_300,
   GRAY_400,
   GRAY_500,

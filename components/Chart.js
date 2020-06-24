@@ -1,10 +1,10 @@
-import React, {memo, useRef, useEffect} from 'react';
-import {axisLeft, axisBottom} from 'd3-axis';
+import React, {memo, useEffect, useRef} from 'react';
+import {axisBottom, axisLeft} from 'd3-axis';
 import {select as d3select} from 'd3-selection';
-import {line as d3line, area as d3area} from 'd3-shape';
+import {area as d3area, line as d3line} from 'd3-shape';
 import {format as d3format} from 'd3-format';
-import {scaleLog, scaleLinear} from 'd3-scale';
-import {GRAY_200, GRAY_400, GRAY_500, GRAY_600, INDIGO_600} from '../constants/constants';
+import {scaleLinear, scaleLog} from 'd3-scale';
+import {GRAY_400, GRAY_500, GRAY_600, INDIGO_600} from '../constants/constants';
 
 const width = 400;
 const height = 185;
