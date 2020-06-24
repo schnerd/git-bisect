@@ -105,6 +105,12 @@ export default function Home() {
           developer utility belt. Hopefully this document helped illustrate how it works and why its
           so effective.
         </p>
+        <p className="text-md mt-6 text-gray-600 p-container">
+          Source Code:{' '}
+          <a href="https://github.com/schnerd/git-bisect" target="_blank" rel="noreferrer">
+            github.com/schnerd/git-bisect
+          </a>
+        </p>
       </main>
 
       <style jsx>{`
