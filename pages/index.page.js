@@ -31,7 +31,7 @@ export default function Home() {
 
       <main className="mb-10 md:mb-40">
         <h1 className="text-2xl md:text-5xl leading-tight mb-6 mt-4 md:mt-20 p-container">
-          Using Git Bisect Effectively
+          Understanding Git Bisect
         </h1>
         <p className="text-xl mb-4 p-container">
           Software developers generally use a version control system like git to save and manage the
