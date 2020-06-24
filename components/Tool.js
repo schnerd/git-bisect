@@ -332,7 +332,7 @@ export default memo(function Tool(props) {
           opacity: 1;
           pointer-events: all;
         }
-        :global(.btn.reset-btn) {
+        :global(.btn.reset-btn.btn-default) {
           position: absolute;
           top: 5px;
           left: 5px;
@@ -341,9 +341,9 @@ export default memo(function Tool(props) {
           padding: 4px 8px;
         }
         :global(.btn.btn-w-code) {
-          display: inline-block;
-          text-align: left;
-          min-width: 130px;
+          display: inline-block !important;
+          text-align: left !important;
+          min-width: 130px !important;
         }
         :global(.btn-code) {
           font-size: 0.8em;

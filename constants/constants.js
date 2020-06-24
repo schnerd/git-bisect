@@ -22,4 +22,7 @@ export const RED_600 = '#e53e3e';
 export const RED_700 = '#c53030';
 export const RED_800 = '#9B2C2C';
 
+export const INDIGO_300 = '#a3bffa';
+export const INDIGO_400 = '#7f9cf5';
+export const INDIGO_500 = '#667eea';
 export const INDIGO_600 = '#5a67d8';

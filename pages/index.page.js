@@ -4,6 +4,7 @@ import CommitTimeline from '../components/CommitTimeline';
 import {NUM_COMMITS} from '../constants/constants';
 import Tool from '../components/Tool';
 import Legend from '../components/Legend';
+import Chart from '../components/Chart';
 
 export default function Home() {
   const vizWidth = 800;
@@ -29,11 +30,11 @@ export default function Home() {
         </p>
         <p className="text-xl mb-4 p-container">
           As a project moves forward, developers may discover that some existing feature or behavior
-          has become broken. Often it's not clear <em>why</em> this functionality broke, and
-          searching through dozens of commits and files to debug the issue can be painful.
+          has broken. Often it's not clear <em>why</em> this functionality broke, and searching
+          through dozens of commits and files to debug the issue can be painful.
         </p>
         <p className="text-xl mb-4 p-container">
-          Thankfully the git version control system has a feature called "bisect" that is a
+          Thankfully, the git version control system has a feature called "bisect" that is a
           lifesaver in these scenarios. This document offers an interactive visualization to help
           understand how git bisect works and why its so effective.
         </p>
@@ -72,9 +73,25 @@ export default function Home() {
           <Tool width={vizWidth} />
         </div>
         <h3 className="text-xl md:text-2xl leading-tight mb-6 mt-4 md:mt-8 p-container">
-          How much faster is it?
+          How Bisect Scales
         </h3>
-        <p className="text-xl mb-4 p-container">Lorem ipsum dolor sit amet</p>
+        <div className="p-container">
+          <div className="chart-container">
+            <Chart />
+          </div>
+          <p className="text-xl mb-4 p-container">
+            This chart shows how the number of steps required to perform a git bisect scales with
+            the number of commits that fall between the known good and known bad commits.
+          </p>
+          <p className="text-xl mb-4 p-container">
+            You can see that even if there are ten thousand commits to search through, we can still
+            find the problematic commit in roughly 14 steps. This is a non-intuitive concept that
+            really illustrates the power of git bisect and binary searches in general.
+          </p>
+          <p className="text-xl mb-4 p-container clear-both">
+            Lorem ipsum dolor sit amet. Hello world okay.
+          </p>
+        </div>
       </main>
 
       <style jsx>{`
@@ -92,6 +109,15 @@ export default function Home() {
         }
         .monospace {
           font-family: monospace;
+        }
+        .chart-container {
+          width: 400px;
+        }
+        @media (min-width: 600px) {
+          .chart-container {
+            margin: 0 -20px 10px 10px;
+            float: right;
+          }
         }
       `}</style>
 
