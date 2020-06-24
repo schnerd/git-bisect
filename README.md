@@ -1,5 +1,7 @@
 This repository holds an interactive document describing how `git bisect` works.
 
+View the app here: https://git-bisect.dschnurr.vercel.app/
+
 ## Development
 
 Run the development server:

@@ -116,14 +116,14 @@ export default function Home() {
       <style jsx>{`
         .p-container {
           width: 100%;
-          max-width: 680px;
+          max-width: 700px;
           margin-left: auto;
           margin-right: auto;
           padding: 0 10px;
         }
         .v-container {
           width: 100%;
-          max-width: 800px;
+          max-width: 820px;
           margin-left: auto;
           margin-right: auto;
           padding: 0 10px;
