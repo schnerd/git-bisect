@@ -4,6 +4,7 @@ import debounce from 'lodash/debounce';
 import {NUM_COMMITS} from '../constants/constants';
 import Tool from '../components/Tool';
 import Chart from '../components/Chart';
+import Simulation from '../components/Simulation';
 
 export default function Home() {
   const [vizWidth, setVizWidth] = useState(null);
@@ -44,9 +45,9 @@ export default function Home() {
           through dozens of commits and files to debug the issue can be painful.
         </p>
         <p className="text-xl mb-4 p-container">
-          Thankfully, the git version control system has a feature called "bisect" that is a
-          lifesaver in these scenarios. This document offers an interactive visualization to help
-          understand how git bisect works and why its so effective.
+          Thankfully, the git version control system has a feature called "bisect" that can be
+          helpful in these scenarios. This document offers an interactive visualization to help
+          understand how git bisect works and why it's so effective.
         </p>
         <h3 className="text-xl md:text-2xl leading-tight mb-6 mt-4 md:mt-8 p-container">
           Discovering an Issue
@@ -89,21 +90,28 @@ export default function Home() {
           <div className="chart-container">
             <Chart />
           </div>
-          <p className="text-xl mb-4 p-container">
+          <p className="text-xl mb-4">
             This chart shows how the number of steps required to perform a git bisect scales with
             the number of commits that fall between the known good and known bad commits.
           </p>
-          <p className="text-xl mb-4 p-container">
+          <p className="text-xl mb-4">
             You can see that even if there are ten thousand commits to search through, we can still
             find the problematic commit in roughly 14 steps. This is a non-intuitive concept that
             really illustrates the power of git bisect and binary searches in general.
           </p>
         </div>
+        <p className="text-xl mb-4 p-container">
+          Using the following tool you can visualize how long a git bisect will take, even when
+          there are thousands of commits to search:
+        </p>
+        <div className="mt-8 mb-8 v-container">
+          <Simulation width={vizWidth} />
+        </div>
         <h3 className="text-xl md:text-2xl leading-tight mb-6 mt-4 md:mt-8 p-container">Summary</h3>
         <p className="text-xl mb-4 p-container">
-          Leveraging the power of log(n) binary searches, git bisect can be a powerful tool in the
-          developer utility belt. Hopefully this document helped illustrate how it works and why its
-          so effective.
+          Leveraging the speed of log(n) binary searches, git bisect can be a powerful tool in the
+          software developer utility belt. Hopefully this document helped illustrate how it works
+          and why its so effective.
         </p>
         <p className="text-md mt-6 text-gray-600 p-container">
           Source Code:{' '}
@@ -127,6 +135,7 @@ export default function Home() {
           margin-left: auto;
           margin-right: auto;
           padding: 0 10px;
+          overflow: hidden;
         }
 
         .monospace {
@@ -134,6 +143,7 @@ export default function Home() {
         }
         .chart-container {
           width: 400px;
+          max-width: 100%;
         }
         @media (min-width: 600px) {
           .chart-container {

@@ -3,6 +3,7 @@ import {select as d3select} from 'd3-selection';
 import {curveBundle, line as d3line} from 'd3-shape';
 import {transition as d3transition} from 'd3-transition';
 import {easeCubicOut} from 'd3-ease';
+import {scalePow} from 'd3-scale';
 import {
   GRAY_600,
   GRAY_700,
@@ -18,12 +19,20 @@ const ACTIVE_COMMIT_COLOR = GRAY_700;
 const COMMIT_LINE_Y = 80;
 
 export default memo(function CommitTimeline(props) {
-  const {activeCommit, visitedCommits = [], goodRange = [], badRange = [], width} = props;
+  const {
+    activeCommit,
+    visitedCommits = [],
+    goodRange = [],
+    badRange = [],
+    numCommits = NUM_COMMITS,
+    width,
+    animationDuration = 2000,
+  } = props;
 
   const [goodStart, goodEnd] = goodRange;
   const [badStart, badEnd] = badRange;
 
-  const commitSpacing = width / (NUM_COMMITS + 1);
+  const commitSpacing = width / (numCommits + 1);
 
   const xPos = (commitNum) => Math.floor(commitNum * commitSpacing) || 0;
   // Store xPos in a ref so we can call it safely from useEffect below
@@ -44,9 +53,10 @@ export default memo(function CommitTimeline(props) {
 
       const midpointX = xPos(end) + (xPos(start) - xPos(end)) / 2;
 
-      const estSteps = Math.ceil(Math.log2(NUM_COMMITS));
+      const estSteps = Math.ceil(Math.log2(numCommits));
       const currentStep = visitedCommits.length - 2;
-      const curveFactor = (estSteps - currentStep) / estSteps;
+      const curveScale = scalePow().domain([estSteps, 1]).range([1, 0]).exponent(3);
+      const curveFactor = curveScale(estSteps - currentStep);
       const arcHeight = curveFactor * 70;
 
       const points = [
@@ -54,7 +64,7 @@ export default memo(function CommitTimeline(props) {
         [midpointX, COMMIT_LINE_Y - arcHeight],
         [xPos(end), COMMIT_LINE_Y],
       ];
-      const path = d3line().curve(curveBundle.beta(curveFactor))(points);
+      const path = d3line().curve(curveBundle.beta(1))(points);
 
       const $path = $curves
         .append('path')
@@ -65,7 +75,7 @@ export default memo(function CommitTimeline(props) {
 
       // Animate the path
       const totalLength = $path.node().getTotalLength();
-      const transition = d3transition().duration(2000).ease(easeCubicOut);
+      const transition = d3transition().duration(animationDuration).ease(easeCubicOut);
       $path
         .attr('stroke-dasharray', totalLength + ' ' + totalLength)
         .attr('stroke-dashoffset', totalLength)
@@ -74,18 +84,26 @@ export default memo(function CommitTimeline(props) {
     } else {
       $curves.selectAll('*').remove();
     }
-  }, [visitedCommits]);
+  }, [visitedCommits, numCommits]);
 
   if (!width) {
     return null;
   }
 
   const commits = [];
-  for (let i = 0; i < NUM_COMMITS; i++) {
+  for (let i = 0; i < numCommits; i++) {
     let commitNum = i + 1;
     let isActiveCommit = commitNum === activeCommit;
     let isGoodCommit = commitNum >= goodStart && commitNum <= goodEnd;
     let isBadCommit = commitNum >= badStart && commitNum <= badEnd;
+
+    let notchColor = isGoodCommit
+      ? GREEN_600
+      : isBadCommit
+      ? RED_700
+      : isActiveCommit
+      ? ACTIVE_COMMIT_COLOR
+      : LINE_COLOR;
 
     if (isActiveCommit) {
       commits.push(
@@ -101,23 +119,28 @@ export default memo(function CommitTimeline(props) {
       );
     }
 
-    commits.push(
-      <circle
-        key={`circle${i}`}
-        cx={xPos(i + 1)}
-        cy={COMMIT_LINE_Y + 1}
-        r={4}
-        fill={
-          isGoodCommit
-            ? GREEN_600
-            : isBadCommit
-            ? RED_700
-            : isActiveCommit
-            ? ACTIVE_COMMIT_COLOR
-            : LINE_COLOR
-        }
-      />,
-    );
+    if (commitSpacing > 10 || isActiveCommit) {
+      commits.push(
+        <circle
+          key={`circle${i}`}
+          cx={xPos(i + 1)}
+          cy={COMMIT_LINE_Y + 1}
+          r={4}
+          fill={notchColor}
+        />,
+      );
+    } else if (commitSpacing > 4) {
+      commits.push(
+        <rect
+          key={`rect${i}`}
+          x={Math.floor(xPos(i + 1) - 1)}
+          y={COMMIT_LINE_Y - 3}
+          width={2}
+          height={8}
+          fill={notchColor}
+        />,
+      );
+    }
   }
 
   return (

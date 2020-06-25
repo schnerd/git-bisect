@@ -200,8 +200,7 @@ export default memo(function ShapeApp(props) {
       </svg>
       <style jsx>{`
         .root {
-          width: 301px;
-          max-width: 100%;
+          max-width: 301px;
           min-width: 0;
           position: relative;
         }

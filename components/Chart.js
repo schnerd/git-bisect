@@ -87,7 +87,13 @@ export default memo(function Chart() {
 
   return (
     <>
-      <svg className="svg" ref={gRef} width={width} height={height}>
+      <svg
+        className="svg"
+        ref={gRef}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+      >
         <defs>
           <linearGradient id="chart-gradient" gradientTransform="rotate(90)">
             <stop offset="0" stopColor={INDIGO_600} stopOpacity="0.8" />
@@ -98,6 +104,8 @@ export default memo(function Chart() {
       </svg>
       <style jsx>{`
         .svg {
+          max-width: 100%;
+          height: auto;
           overflow: visible;
         }
         .svg :global(.tick line) {

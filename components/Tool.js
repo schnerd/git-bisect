@@ -296,6 +296,7 @@ export default memo(function Tool(props) {
       </div>
       <style jsx>{`
         .top-item {
+          flex: 0 1 auto;
           border: 1px solid ${GRAY_400};
         }
         .top-item:first-child {
